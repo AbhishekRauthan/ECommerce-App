@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeormConfigService } from './typeorm/typeormConfig.service';
+import { TypeormService } from './typeorm/typeorm.service';
+import { Product } from '../product/product.entity';
 
 @Module({
   imports: [
@@ -12,6 +14,9 @@ import { TypeormConfigService } from './typeorm/typeormConfig.service';
     TypeOrmModule.forRootAsync({
       useClass: TypeormConfigService,
     }),
+    TypeOrmModule.forFeature([Product])
   ],
+  providers: [TypeormService],
+  exports:[TypeormService]
 })
 export class SharedModule {}
