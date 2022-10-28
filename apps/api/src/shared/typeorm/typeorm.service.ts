@@ -1,13 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
+import { Order } from '../model/order.entity';
 import { Product } from '../model/product.entity';
+import { User } from '../model/user.entity';
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class TypeormService {
   constructor(
     @InjectRepository(Product)
-    private readonly productsRepository: Repository<Product>
+    private readonly productsRepository: Repository<Product>,
+    @InjectRepository(Order)
+    private ordersRepository: Repository<Order>,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>
   ) {}
 
   async findAllProducts(): Promise<Product[]> {
@@ -16,5 +23,55 @@ export class TypeormService {
 
   async findOneProduct(id: number): Promise<Product> {
     return await this.productsRepository.findOneBy({ id });
+  }
+
+  findByProductIds(ids: string[]): Promise<Product[]> {
+    return this.productsRepository.findBy({ id: In(ids) });
+  }
+
+  createOrUpdateProduct(product: Product): Promise<Product> {
+    return this.productsRepository.save(product);
+  }
+
+  async removeProduct(id: string): Promise<void> {
+    await this.productsRepository.delete(id);
+  }
+
+  createOrUpdateOrder(order: Order): Promise<Order> {
+    return this.ordersRepository.save(order);
+  }
+
+  findByUserId(id: number): Promise<Order[]> {
+    return this.ordersRepository.find({
+      where: {
+        user: { id: id },
+      },
+      relations: ['items', 'items.product'],
+    });
+  }
+
+  async createOrUpdateUser(user: User): Promise<User> {
+    const hash = await bcrypt.hash(user.getPassword(), 10);
+    user.setPassword(hash);
+    return this.usersRepository.save(user);
+  }
+
+  async userLogin(email: string, password: string): Promise<User> {
+    const user = await this.usersRepository.findOneBy({ email });
+    if (user) {
+      const isMatch = await bcrypt.compare(password, user.getPassword());
+      if (isMatch) {
+        return user;
+      }
+    }
+    return null;
+  }
+
+  findOneUser(id: number): Promise<User> {
+    return this.usersRepository.findOneBy({ id: id });
+  }
+
+  updateBalance(id: number, balance: number) {
+    return this.usersRepository.update(id, { balance: balance });
   }
 }
