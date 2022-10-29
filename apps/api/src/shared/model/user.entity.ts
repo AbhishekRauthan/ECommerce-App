@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Roles } from '../../types/index.types';
 import { Order } from './order.entity';
 
 @Entity()
@@ -15,8 +16,12 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
-  role: string;
+  @Column({
+    type: 'enum',
+    enum: Roles,
+    default: Roles.User,
+  })
+  role: Roles;
 
   @Column()
   balance: number;
@@ -60,7 +65,7 @@ export class User {
     return this.role;
   }
 
-  setRole(role: string) {
+  setRole(role: Roles) {
     this.role = role;
   }
 
@@ -71,7 +76,7 @@ export class User {
   setBalance(balance: number) {
     this.balance = balance;
   }
-  
+
   getOrders(): Order[] {
     return this.orders;
   }
