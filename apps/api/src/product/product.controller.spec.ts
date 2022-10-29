@@ -8,7 +8,7 @@ type MockType<T> = {
 
 describe('ProductController', () => {
   let controller: ProductController;
-  const productServiceMock: MockType<TypeormService> = {
+  const typeormServiceMock: MockType<TypeormService> = {
     findAllProducts: jest.fn(),
     findOneProduct: jest.fn(),
   };
@@ -18,7 +18,7 @@ describe('ProductController', () => {
       providers: [
         {
           provide: TypeormService,
-          useValue: productServiceMock,
+          useValue: typeormServiceMock,
         },
       ],
     }).compile();
@@ -27,7 +27,7 @@ describe('ProductController', () => {
   });
 
   it('should throw bad request error', async () => {
-    productServiceMock.findAllProducts = jest
+    typeormServiceMock.findAllProducts = jest
       .fn()
       .mockImplementation(() => Promise.reject(null));
     try {
@@ -38,7 +38,7 @@ describe('ProductController', () => {
   });
 
   it('should throw not found error', async () => {
-    productServiceMock.findOneProduct = jest
+    typeormServiceMock.findOneProduct = jest
       .fn()
       .mockImplementation(() => Promise.reject(null));
     try {
