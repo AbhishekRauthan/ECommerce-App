@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeormConfigService } from './typeorm/typeormConfig.service';
@@ -8,6 +8,7 @@ import { Item } from './model/item.entity';
 import { Order } from './model/order.entity';
 import { User } from './model/user.entity';
 
+@Global()
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,6 +21,6 @@ import { User } from './model/user.entity';
     TypeOrmModule.forFeature([Product, Item, Order, User]),
   ],
   providers: [TypeormService],
-  exports: [TypeormService],
+  exports: [TypeormService, TypeOrmModule],
 })
 export class SharedModule {}
