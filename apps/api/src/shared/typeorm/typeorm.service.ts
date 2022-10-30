@@ -4,7 +4,8 @@ import { In, Repository } from 'typeorm';
 import { Order } from '../model/order.entity';
 import { Product } from '../model/product.entity';
 import { User } from '../model/user.entity';
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcrypt';
+import { UserRegisterDTO } from '../../dto/user.dto';
 
 @Injectable()
 export class TypeormService {
@@ -50,9 +51,13 @@ export class TypeormService {
     });
   }
 
-  async createOrUpdateUser(user: User): Promise<User> {
-    const hash = await bcrypt.hash(user.getPassword(), 10);
-    user.setPassword(hash);
+  async createUser(user: UserRegisterDTO): Promise<User> {
+    const { email, name, password, role } = user;
+    const hash = await bcrypt.hash(password, 10);
+    return this.usersRepository.save({ email, name, password: hash, role });
+  }
+
+  async updateUser(user: User): Promise<User> {
     return this.usersRepository.save(user);
   }
 
@@ -65,6 +70,10 @@ export class TypeormService {
       }
     }
     return null;
+  }
+
+  async findUserByEmail(email: string) {
+    return await this.usersRepository.findOneBy({ email });
   }
 
   findOneUser(id: number): Promise<User> {

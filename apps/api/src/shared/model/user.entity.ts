@@ -23,7 +23,7 @@ export class User {
   })
   role: Roles;
 
-  @Column()
+  @Column({ nullable: true })
   balance: number;
 
   @OneToMany(() => Order, (order) => order.user)
