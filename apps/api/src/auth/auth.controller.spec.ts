@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserRegisterDTO } from '../dto/user.dto';
+import { UserLoginDTO, UserRegisterDTO } from '../dto/user.dto';
 import { TypeormService } from '../shared/typeorm/typeorm.service';
 import { Roles } from '../types/index.types';
 import { AuthController } from './auth.controller';
@@ -68,4 +68,20 @@ describe('AuthController', () => {
       }
     });
   });
+
+  describe('UserLogin Test', () => { 
+    it("should throw Not found Error", async () => {
+      const user: UserLoginDTO = {
+        email: 'test@example.com',
+        password: 'test_password',
+      };
+
+      typeormServiceMock.userLogin = jest.fn().mockResolvedValue(null);
+      try {
+        await controller.loginUser(user)
+      } catch (error) {
+        expect(error.response.message).toBe("Not Found")
+      }
+    })
+   })
 });

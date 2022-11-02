@@ -3,10 +3,11 @@ import {
   Body,
   ConflictException,
   Controller,
+  NotFoundException,
   NotImplementedException,
   Post,
 } from '@nestjs/common';
-import { UserRegisterDTO } from '../dto/user.dto';
+import { UserLoginDTO, UserRegisterDTO } from '../dto/user.dto';
 import { TypeormService } from '../shared/typeorm/typeorm.service';
 
 @Controller('auth')
@@ -14,8 +15,15 @@ export class AuthController {
   constructor(private typeormService: TypeormService) {}
 
   @Post('/login')
-  loginUser() {
-    throw new NotImplementedException('Not Worked not it');
+  async loginUser(@Body() userInfo: UserLoginDTO) {
+    const { email, password } = userInfo;
+
+    const user = await this.typeormService.userLogin(email, password);
+
+    if (!user) {
+      throw new NotFoundException(`User of email: '${email}' not found`);
+    }
+    return user;
   }
 
   @Post('/register')
