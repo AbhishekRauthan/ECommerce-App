@@ -1,3 +1,4 @@
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserLoginDTO, UserRegisterDTO } from '../dto/user.dto';
 import { TypeormService } from '../shared/typeorm/typeorm.service';
@@ -20,6 +21,10 @@ describe('AuthController', () => {
         {
           provide: TypeormService,
           useValue: typeormServiceMock,
+        },
+        {
+          provide: JwtService,
+          useValue: {},
         },
       ],
     }).compile();
@@ -69,8 +74,8 @@ describe('AuthController', () => {
     });
   });
 
-  describe('UserLogin Test', () => { 
-    it("should throw Not found Error", async () => {
+  describe('UserLogin Test', () => {
+    it('should throw Not found Error', async () => {
       const user: UserLoginDTO = {
         email: 'test@example.com',
         password: 'test_password',
@@ -78,10 +83,33 @@ describe('AuthController', () => {
 
       typeormServiceMock.userLogin = jest.fn().mockResolvedValue(null);
       try {
-        await controller.loginUser(user)
+        await controller.loginUser(user);
       } catch (error) {
-        expect(error.response.message).toBe("Not Found")
+        expect(error.response.message).toBe('Not Found');
       }
-    })
-   })
+    });
+  });
+
+  describe('User Register Admin Test', () => {
+    it('should throw UnauthorizedException', async () => {
+      const user: UserRegisterDTO = {
+        email: 'test@example.com',
+        name: 'test user',
+        password: 'test_password',
+        role: Roles.User,
+      };
+      typeormServiceMock.findUserByEmail = jest
+        .fn()
+        .mockImplementation(() => Promise.resolve(null));
+
+      typeormServiceMock.createUser = jest
+        .fn()
+        .mockImplementation(() => Promise.reject(null));
+      try {
+        await controller.registerAdmin(user);
+      } catch (error) {
+        expect(error.response.message).toBe('Unable to create user');
+      }
+    });
+  });
 });

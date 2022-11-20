@@ -4,17 +4,23 @@ import {
   ConflictException,
   Controller,
   NotFoundException,
-  NotImplementedException,
   Post,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { UserLoginDTO, UserRegisterDTO } from '../dto/user.dto';
 import { TypeormService } from '../shared/typeorm/typeorm.service';
+import { Roles } from '../types/index.types';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private typeormService: TypeormService) {}
+  constructor(
+    private typeormService: TypeormService,
+    private jwtService: JwtService
+  ) {}
 
   @Post('/login')
+  @Post('/admin/login')
   async loginUser(@Body() userInfo: UserLoginDTO) {
     const { email, password } = userInfo;
 
@@ -23,7 +29,13 @@ export class AuthController {
     if (!user) {
       throw new NotFoundException(`User of email: '${email}' not found`);
     }
-    return user;
+    return {
+      id: user.getId(),
+      email: user.getEmail(),
+      name: user.getName(),
+      role: user.getRole(),
+      token: this.jwtService.sign({ id: user.getId() }),
+    };
   }
 
   @Post('/register')
@@ -35,18 +47,41 @@ export class AuthController {
         `User with email: '${email}' already exists!`
       );
     }
-    return await this.typeormService.createUser(userInfo).catch(() => {
+    const user = await this.typeormService.createUser(userInfo).catch(() => {
       throw new BadRequestException('Unable to create user');
     });
-  }
 
-  @Post('/admin/login')
-  loginAdmin() {
-    throw new NotImplementedException('Not Worked not it');
+    return {
+      id: user.getId(),
+      email: user.getEmail(),
+      name: user.getName(),
+      role: user.getRole(),
+      token: this.jwtService.sign({ id: user.getId() }),
+    };
   }
 
   @Post('/admin/register')
-  registerAdmin() {
-    throw new NotImplementedException('Not Worked not it');
+  async registerAdmin(@Body() userInfo: UserRegisterDTO) {
+    const { email, role } = userInfo;
+    if (role !== Roles.Admin) {
+      throw new UnauthorizedException('Need to be admin');
+    }
+    const userExists = await this.typeormService.findUserByEmail(email);
+    if (userExists) {
+      throw new ConflictException(
+        `User with email: '${email}' already exists!`
+      );
+    }
+    const user = await this.typeormService.createUser(userInfo).catch(() => {
+      throw new BadRequestException('Unable to create user');
+    });
+
+    return {
+      id: user.getId(),
+      email: user.getEmail(),
+      name: user.getName(),
+      role: user.getRole(),
+      token: this.jwtService.sign({ id: user.getId() }),
+    };
   }
 }
