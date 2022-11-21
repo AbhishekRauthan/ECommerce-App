@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserLoginDTO, UserRegisterDTO } from '../dto/user.dto';
+import { User } from '../shared/model/user.entity';
 import { TypeormService } from '../shared/typeorm/typeorm.service';
 import { Roles } from '../types/index.types';
 
@@ -18,6 +19,16 @@ export class AuthController {
     private typeormService: TypeormService,
     private jwtService: JwtService
   ) {}
+
+  returnUserDetails(user: User) {
+    return {
+      id: user.getId(),
+      email: user.getEmail(),
+      name: user.getName(),
+      role: user.getRole(),
+      token: this.jwtService.sign({ id: user.getId() }),
+    };
+  }
 
   @Post('/login')
   @Post('/admin/login')
@@ -29,13 +40,7 @@ export class AuthController {
     if (!user) {
       throw new NotFoundException(`User of email: '${email}' not found`);
     }
-    return {
-      id: user.getId(),
-      email: user.getEmail(),
-      name: user.getName(),
-      role: user.getRole(),
-      token: this.jwtService.sign({ id: user.getId() }),
-    };
+    return this.returnUserDetails(user);
   }
 
   @Post('/register')
@@ -51,13 +56,7 @@ export class AuthController {
       throw new BadRequestException('Unable to create user');
     });
 
-    return {
-      id: user.getId(),
-      email: user.getEmail(),
-      name: user.getName(),
-      role: user.getRole(),
-      token: this.jwtService.sign({ id: user.getId() }),
-    };
+    return this.returnUserDetails(user);
   }
 
   @Post('/admin/register')
@@ -76,12 +75,6 @@ export class AuthController {
       throw new BadRequestException('Unable to create user');
     });
 
-    return {
-      id: user.getId(),
-      email: user.getEmail(),
-      name: user.getName(),
-      role: user.getRole(),
-      token: this.jwtService.sign({ id: user.getId() }),
-    };
+    return this.returnUserDetails(user);
   }
 }
